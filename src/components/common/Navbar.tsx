@@ -1,10 +1,12 @@
-// src/components/common/Navbar.tsx
 import { useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useAuth } from '../../context/AuthContext'
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false)
   const location = useLocation()
+  const navigate = useNavigate()
+  const { user, logout } = useAuth()
 
   const navLinks = [
     { name: 'Home', path: '/' },
@@ -14,8 +16,12 @@ const Navbar = () => {
     { name: 'Blog', path: '/blog' },
   ]
 
-  // Cek apakah link sedang aktif
   const isActive = (path: string) => location.pathname === path
+
+  const handleLogout = async () => {
+    await logout()
+    navigate('/')
+  }
 
   return (
     <nav className="bg-gray-900 text-white shadow-lg">
@@ -45,17 +51,44 @@ const Navbar = () => {
           ))}
         </ul>
 
-        {/* Login Button */}
-        <div className="hidden md:block">
-          <Link
-            to="/login"
-            className="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-lg font-medium transition-colors"
-          >
-            Login
-          </Link>
+        {/* Auth Buttons */}
+        <div className="hidden md:flex items-center gap-3">
+          {user ? (
+            // Sudah login
+            <>
+              <Link
+                to="/create-blog"
+                className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+              >
+                + Tulis Artikel
+              </Link>
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-red-600 rounded-full flex items-center justify-center">
+                  <span className="text-white text-sm font-bold">
+                    {(user.name || user.email).charAt(0).toUpperCase()}
+                  </span>
+                </div>
+                <span className="text-gray-300 text-sm">{user.name || user.email}</span>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            // Belum login
+            <Link
+              to="/login"
+              className="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-lg font-medium transition-colors"
+            >
+              Login
+            </Link>
+          )}
         </div>
 
-        {/* Hamburger Menu (Mobile) */}
+        {/* Hamburger */}
         <button
           className="md:hidden text-white"
           onClick={() => setIsOpen(!isOpen)}
@@ -85,15 +118,37 @@ const Navbar = () => {
                 </Link>
               </li>
             ))}
-            <li>
-              <Link
-                to="/login"
-                onClick={() => setIsOpen(false)}
-                className="block bg-red-600 text-white text-center py-2 rounded-lg font-medium"
-              >
-                Login
-              </Link>
-            </li>
+            {user ? (
+              <>
+                <li>
+                  <Link
+                    to="/create-blog"
+                    onClick={() => setIsOpen(false)}
+                    className="block py-2 text-gray-300 hover:text-red-400"
+                  >
+                    + Tulis Artikel
+                  </Link>
+                </li>
+                <li>
+                  <button
+                    onClick={handleLogout}
+                    className="block w-full text-left py-2 text-red-400"
+                  >
+                    Logout
+                  </button>
+                </li>
+              </>
+            ) : (
+              <li>
+                <Link
+                  to="/login"
+                  onClick={() => setIsOpen(false)}
+                  className="block bg-red-600 text-white text-center py-2 rounded-lg font-medium"
+                >
+                  Login
+                </Link>
+              </li>
+            )}
           </ul>
         </div>
       )}
